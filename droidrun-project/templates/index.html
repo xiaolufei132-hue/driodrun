@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DroidRun 智能控制台</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h1 class="h3 mb-0 text-white">
+                            <i class="fas fa-robot me-2"></i>DroidRun 智能控制台
+                        </h1>
+                        <p class="text-white-50 mb-0">基于AI的Android自动化控制平台</p>
+                    </div>
+                    <div id="status-indicator">
+                        <span class="status-dot" id="status-dot"></span>
+                        <span id="status-text">就绪</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 左侧主控制区 -->
+            <div class="col-lg-8">
+                <div class="main-card p-4 mb-4">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3"><i class="fas fa-terminal me-2"></i>任务控制</h5>
+                            <div class="input-group">
+                                <input type="text" id="cmdInput" class="form-control"
+                                       placeholder="告诉AI要做什么，例如：打开微信并给张三发消息"
+                                       value="打开设置">
+                                <button class="btn btn-primary" onclick="runCommand()" id="run-btn">
+                                    <i class="fas fa-play me-2"></i><span id="run-btn-text">开始执行</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3"><i class="fas fa-bolt me-2"></i>快捷指令</h5>
+                            <div class="d-flex flex-wrap gap-2" id="quick-commands">
+                                <!-- 动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0"><i class="fas fa-scroll me-2"></i>执行日志</h5>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="clearConsole()">
+                                        <i class="fas fa-trash-alt me-1"></i>清空
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="exportLogs()">
+                                        <i class="fas fa-download me-1"></i>导出
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="console" class="console-card">
+                                <div class="log-entry system">
+                                    <i class="fas fa-check-circle me-2 text-success"></i>
+                                    系统就绪，输入指令开始AI自动化控制
+                                </div>
+                                <div class="log-entry system">
+                                    <i class="fas fa-info-circle me-2 text-info"></i>
+                                    提示：指令描述越详细，AI执行效果越好
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stat-icon icon-blue">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <h4 id="total-tasks">0</h4>
+                            <p class="text-muted mb-0">总执行任务</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stat-icon icon-green">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h4 id="success-rate">0%</h4>
+                            <p class="text-muted mb-0">成功率</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stat-icon icon-purple">
+                                <i class="fas fa-folder"></i>
+                            </div>
+                            <h4 id="traj-count">0</h4>
+                            <p class="text-muted mb-0">轨迹记录</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stat-icon icon-orange">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h4 id="avg-time">0s</h4>
+                            <p class="text-muted mb-0">平均用时</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧信息区 -->
+            <div class="col-lg-4">
+                <!-- 轨迹记录 -->
+                <div class="main-card p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>轨迹记录</h5>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshTrajs()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="openTrajFolder()">
+                                <i class="fas fa-folder-open"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 修改：增加轨迹记录框的高度 -->
+                    <div class="trajectory-container">
+                        <div class="list-group list-group-flush" id="traj-list">
+                            <div class="list-group-item text-muted text-center py-4">
+                                <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                暂无轨迹记录
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统信息 -->
+                <div class="main-card p-4 mb-4">
+                    <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>系统信息</h5>
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <small class="text-muted d-block">运行模式</small>
+                            <span class="badge bg-success">虚拟环境</span>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <small class="text-muted d-block">AI模型</small>
+                            <span class="badge bg-info">deepseek-chat</span>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <small class="text-muted d-block">时间</small>
+                            <span id="current-time">{{ current_time }}</span>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted d-block">工作目录</small>
+                            <code class="small">C:\Users\32765</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 应用优化指令已移除 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

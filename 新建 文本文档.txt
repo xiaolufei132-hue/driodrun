@@ -1,0 +1,27 @@
+adb connect 127.0.0.1:5555
+adb devices
+
+#进入虚拟环境
+.venv\Scripts\activate
+
+# 设置环境变量，明确告诉droidrun使用哪个设备
+set ANDROID_SERIAL=127.0.0.1:5555
+
+set GOOGLE_API_KEY=sk-Y89Ej7Gj0A6gfCKfxjzkMOft9TdIUg82jRP7tWdlap8TueXy
+
+# 然后运行测试
+droidrun ping
+
+droidrun run "打开设置查看Android版本" --provider DeepSeek --model deepseek-chat
+
+droidrun run "打开游戏中心查看榜单里排名第一的游戏名字并输出" --provider DeepSeek --model deepseek-chat
+
+
+#打开界面
+#在虚拟环境里
+python app.py
+
+#在网页端进入交换界面
+http://127.0.0.1:5000
+
+优化：1.搜索主屏幕的所有页面和应用夹层
